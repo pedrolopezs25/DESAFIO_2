@@ -8,4 +8,5 @@ SOURCES += \
         main.cpp
 
 HEADERS += \
-    Fecha.h
+    Fecha.h \
+    lista.h

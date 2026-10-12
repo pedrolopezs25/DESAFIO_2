@@ -2,10 +2,10 @@
 #define FECHA_H
 
 #include <iostream>
+using namespace std;
 
-// Representa un momento en el tiempo: día, mes, año, hora y minuto.
-// La usan Usuario (nacimiento, inscripción), Foto (captura),
-// Mensaje (envío) y Solicitud (envío).
+// Clase Fecha: guarda dia, mes, año, hora y minuto.
+// La usan Usuario, Foto, Mensaje y Solicitud.
 class Fecha {
 private:
     int dia;
@@ -14,14 +14,11 @@ private:
     int hora;
     int minuto;
 
-    // Convierte la fecha en un solo número para poder compararla.
-    long long clave() const;
-
 public:
-    // Constructores (sobrecarga de constructores)
+    // Constructores
     Fecha();
-    Fecha(int dia, int mes, int anio);
-    Fecha(int dia, int mes, int anio, int hora, int minuto);
+    Fecha(int d, int m, int a);
+    Fecha(int d, int m, int a, int h, int min);
     Fecha(const Fecha& otra);
 
     // Getters
@@ -32,19 +29,21 @@ public:
     int getMinuto() const;
 
     // Setters
-    void setDia(int dia);
-    void setMes(int mes);
-    void setAnio(int anio);
-    void setHora(int hora);
-    void setMinuto(int minuto);
+    void setDia(int d);
+    void setMes(int m);
+    void setAnio(int a);
+    void setHora(int h);
+    void setMinuto(int min);
 
-    // Operadores sobrecargados para comparar fechas
+    // Operadores
     bool operator<(const Fecha& otra) const;
     bool operator==(const Fecha& otra) const;
     bool operator<=(const Fecha& otra) const;
+    Fecha& operator=(const Fecha& otra);
 
-    // Función amiga: permite escribir  cout << fecha;
-    friend std::ostream& operator<<(std::ostream& salida, const Fecha& f);
+    // Funcion amiga para imprimir con cout
+    friend ostream& operator<<(ostream& salida, const Fecha& f);
 };
 
 #endif
+
