@@ -14,9 +14,13 @@ private:
 
 public:
     Lista();
+    Lista(const Lista<T>& otra);
     ~Lista();
 
+    Lista<T>& operator=(const Lista<T>& otra);
+
     void agregar(T elemento);
+    void eliminar(int posicion);
     T& operator[](int posicion);
     int getCantidad() const;
     int getCapacidad() const;
@@ -30,10 +34,44 @@ Lista<T>::Lista() {
     datos = new T[capacidad];
 }
 
+// Constructor de copia: crea una lista nueva con su PROPIO arreglo
+// y copia ahi los elementos de la otra lista.
+template <typename T>
+Lista<T>::Lista(const Lista<T>& otra) {
+    capacidad = otra.capacidad;
+    cantidad = otra.cantidad;
+    datos = new T[capacidad];
+
+    for (int i = 0; i < cantidad; i++) {
+        datos[i] = otra.datos[i];
+    }
+}
+
 // Destructor: libera la memoria del arreglo
 template <typename T>
 Lista<T>::~Lista() {
     delete[] datos;
+}
+
+// Asignacion: lista1 = lista2;
+// Borra el arreglo viejo y crea uno nuevo con los elementos de la otra.
+template <typename T>
+Lista<T>& Lista<T>::operator=(const Lista<T>& otra) {
+    if (this == &otra) {
+        return *this;
+    }
+
+    delete[] datos;
+
+    capacidad = otra.capacidad;
+    cantidad = otra.cantidad;
+    datos = new T[capacidad];
+
+    for (int i = 0; i < cantidad; i++) {
+        datos[i] = otra.datos[i];
+    }
+
+    return *this;
 }
 
 // Agrega un elemento al final.
@@ -55,6 +93,21 @@ void Lista<T>::agregar(T elemento) {
 
     datos[cantidad] = elemento;
     cantidad++;
+}
+
+// Elimina el elemento de la posicion indicada.
+// Los elementos que estan despues se corren un puesto a la izquierda.
+template <typename T>
+void Lista<T>::eliminar(int posicion) {
+    if (posicion < 0 || posicion >= cantidad) {
+        return;
+    }
+
+    for (int i = posicion; i < cantidad - 1; i++) {
+        datos[i] = datos[i + 1];
+    }
+
+    cantidad--;
 }
 
 // Permite usar la lista como un arreglo: lista[0], lista[1], ...

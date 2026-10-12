@@ -1,28 +1,53 @@
-// Programa pequeño para probar la clase Fecha antes de usarla en el proyecto.
+// Prueba del paso 3b: copiar listas y eliminar elementos.
 #include <iostream>
-#include "Fecha.h"
+#include "Lista.h"
 
 using namespace std;
 
+void mostrar(Lista<int>& lista) {
+    for (int i = 0; i < lista.getCantidad(); i++) {
+        cout << lista[i] << " ";
+    }
+    cout << "(cantidad=" << lista.getCantidad() << ")" << endl;
+}
+
 int main() {
-    Fecha a;                          // constructor por defecto
-    Fecha b(8, 10, 2026);             // solo día, mes y año
-    Fecha c(12, 10, 2026, 18, 26);    // con hora y minuto
-    Fecha d(c);                       // constructor de copia
+    Lista<int> a;
+    for (int i = 1; i <= 5; i++) {
+        a.agregar(i * 10);
+    }
+    cout << "a: ";
+    mostrar(a);
 
-    cout << "a = " << a << endl;
-    cout << "b = " << b << endl;
-    cout << "c = " << c << endl;
-    cout << "d = " << d << endl;
+    // 1. Constructor de copia
+    Lista<int> b(a);
+    b[0] = 999;
+    cout << "b (copia de a, con b[0]=999): ";
+    mostrar(b);
+    cout << "a no cambia: ";
+    mostrar(a);
 
-    cout << "b < c ?  " << (b < c) << endl;    // 1 = verdadero
-    cout << "c < b ?  " << (c < b) << endl;    // 0 = falso
-    cout << "c == d ? " << (c == d) << endl;
-    cout << "c <= d ? " << (c <= d) << endl;
+    // 2. Operador =
+    Lista<int> c;
+    c.agregar(1);
+    c = a;
+    c.agregar(60);
+    cout << "c (despues de c = a y agregar 60): ";
+    mostrar(c);
+    cout << "a no cambia: ";
+    mostrar(a);
 
-    d.setMinuto(5);
-    cout << "d despues de setMinuto(5) = " << d << endl;
-    cout << "c sigue igual = " << c << endl;
+    // 3. Eliminar
+    a.eliminar(1);
+    cout << "a despues de eliminar la posicion 1: ";
+    mostrar(a);
+    a.eliminar(0);
+    cout << "a despues de eliminar la posicion 0: ";
+    mostrar(a);
+    a.eliminar(50);
+    cout << "a despues de eliminar la posicion 50 (no existe): ";
+    mostrar(a);
 
     return 0;
 }
+
