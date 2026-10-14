@@ -9,6 +9,7 @@ SOURCES += \
         Foto.cpp \
         Mensaje.cpp \
         Solicitud.cpp \
+        Usuario.cpp \
         main.cpp
 
 HEADERS += \
@@ -16,5 +17,6 @@ HEADERS += \
     Foto.h \
     Mensaje.h \
     Solicitud.h \
+    Usuario.h \
     album.h \
     lista.h
