@@ -7,6 +7,7 @@ SOURCES += \
         Album.cpp \
         Fecha.cpp \
         Foto.cpp \
+        GestorArchivos.cpp \
         MatrizAmistad.cpp \
         Mensaje.cpp \
         Metricas.cpp \
@@ -17,6 +18,7 @@ SOURCES += \
 HEADERS += \
     Fecha.h \
     Foto.h \
+    GestorArchivos.h \
     MatrizAmistad.h \
     Mensaje.h \
     Metricas.h \
