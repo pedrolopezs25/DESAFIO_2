@@ -116,6 +116,48 @@ int Plataforma::memoriaDelSistema() {
     return total;
 }
 
+// Fecha y hora de hoy en Colombia, a partir del reloj del computador.
+// <chrono> da los segundos que han pasado desde el 01/01/1970 00:00 (hora UTC).
+// Con ciclos sencillos convertimos esos segundos en dia, mes, año, hora y minuto.
+Fecha Plataforma::fechaDeHoy() {
+    long long segundos = chrono::duration_cast<chrono::seconds>(
+                             chrono::system_clock::now().time_since_epoch()).count();
+    segundos = segundos - 5 * 3600;   // Colombia esta 5 horas atras de UTC
+
+    long long dias = segundos / 86400;            // dias completos desde 1970
+    int segundosDelDia = segundos % 86400;
+    int hora = segundosDelDia / 3600;
+    int minuto = (segundosDelDia % 3600) / 60;
+
+    // Quitar años completos
+    int anio = 1970;
+    while (true) {
+        int diasDelAnio = 365;
+        if ((anio % 4 == 0 && anio % 100 != 0) || anio % 400 == 0) {
+            diasDelAnio = 366;   // año bisiesto
+        }
+        if (dias < diasDelAnio) {
+            break;
+        }
+        dias = dias - diasDelAnio;
+        anio++;
+    }
+
+    // Quitar meses completos
+    int diasMes[13] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    if ((anio % 4 == 0 && anio % 100 != 0) || anio % 400 == 0) {
+        diasMes[2] = 29;
+    }
+    int mes = 1;
+    while (dias >= diasMes[mes]) {
+        dias = dias - diasMes[mes];
+        mes++;
+    }
+
+    int dia = dias + 1;   // los dias que sobran son del mes actual (empezando en 1)
+    return Fecha(dia, mes, anio, hora, minuto);
+}
+
 // ===================== Menu principal =====================
 
 void Plataforma::ejecutar() {
@@ -261,8 +303,7 @@ void Plataforma::elegirFotos(Lista<int> pesos) {
 
 // ===================== Menu del usuario =====================
 
-// Por ahora solo muestra las opciones.
-// Cada funcionalidad se agrega en los siguientes pasos.
+// Muestra las opciones y llama a la funcionalidad que se escoja
 void Plataforma::menuUsuario() {
     int opcion = -1;
 
@@ -279,12 +320,473 @@ void Plataforma::menuUsuario() {
         cout << "Opcion: ";
         opcion = leerOpcion();
 
-        if (opcion >= 1 && opcion <= 7) {
-            cout << "(Esta opcion la programamos en los siguientes pasos)" << endl;
+        if (opcion == 1) {
+            verSolicitudes();
+        } else if (opcion == 2) {
+            enviarSolicitud();
+        } else if (opcion == 3) {
+            visitarPerfil();
+        } else if (opcion == 4) {
+            sugerencias();
+        } else if (opcion == 5) {
+            enviarMensaje();
+        } else if (opcion == 6) {
+            leerMensajesNuevos();
+        } else if (opcion == 7) {
+            buscarMensajes();
         } else if (opcion == 0) {
             cout << "Sesion cerrada." << endl;
         } else {
             cout << "Opcion no valida." << endl;
         }
     }
+}
+
+// ===================== Solicitudes de amistad =====================
+
+// Muestra las solicitudes recibidas y deja aceptar una (o volver con 0)
+void Plataforma::verSolicitudes() {
+    Metricas::reiniciar();
+    Usuario& yo = usuarios[idActual];
+
+    if (yo.getCantidadSolicitudes() == 0) {
+        cout << "No tienes solicitudes de amistad." << endl;
+        Metricas::mostrar("Ver solicitudes", memoriaDelSistema());
+        return;
+    }
+
+    cout << "Solicitudes de amistad:" << endl;
+    for (int i = 0; i < yo.getCantidadSolicitudes(); i++) {
+        Metricas::contar();
+        Solicitud sol = yo.getSolicitud(i);
+        cout << "  " << (i + 1) << ". " << sol.getEmisor() << " (" << sol.getFecha() << ")" << endl;
+    }
+    cout << "Numero de la solicitud que quieres aceptar (0 = volver): ";
+    int numero = leerOpcion();
+    Metricas::agregarMemoriaLocal(sizeof(numero));
+
+    if (numero < 1 || numero > yo.getCantidadSolicitudes()) {
+        if (numero != 0) {
+            cout << "Numero no valido." << endl;
+        }
+        Metricas::mostrar("Ver solicitudes", memoriaDelSistema());
+        return;
+    }
+
+    // En pantalla empezamos en 1, pero en la lista se empieza en 0
+    int posicion = numero - 1;
+    string nombreEmisor = yo.getSolicitud(posicion).getEmisor();
+    int idEmisor = buscarUsuario(nombreEmisor);
+    Metricas::agregarMemoriaLocal(sizeof(posicion) + sizeof(nombreEmisor) + sizeof(idEmisor));
+
+    // La amistad se guarda en los dos lados: la matriz y las dos listas de amigos
+    if (idEmisor != -1 && !matriz->sonAmigos(idActual, idEmisor)) {
+        matriz->agregarAmistad(idActual, idEmisor);
+        yo.agregarAmigo(idEmisor);
+        usuarios[idEmisor].agregarAmigo(idActual);
+    }
+    yo.eliminarSolicitud(posicion);
+
+    cout << "Ahora " << nombreEmisor << " y tu son amigos." << endl;
+    Metricas::mostrar("Aceptar solicitud", memoriaDelSistema());
+}
+
+// Envia una solicitud de amistad a otro usuario
+void Plataforma::enviarSolicitud() {
+    Metricas::reiniciar();
+    Usuario& yo = usuarios[idActual];
+
+    string nombre;
+    cout << "Nombre del usuario: ";
+    getline(cin, nombre);
+    Metricas::agregarMemoriaLocal(sizeof(nombre));
+
+    int idOtro = buscarUsuario(nombre);
+    Metricas::agregarMemoriaLocal(sizeof(idOtro));
+
+    if (idOtro == -1) {
+        cout << "Ese usuario no existe." << endl;
+    } else if (idOtro == idActual) {
+        cout << "No te puedes enviar una solicitud a ti mismo." << endl;
+    } else if (matriz->sonAmigos(idActual, idOtro)) {
+        cout << "Ya eres amigo de " << nombre << "." << endl;
+    } else if (usuarios[idOtro].tieneSolicitudDe(yo.getNombreUsuario())) {
+        cout << "Ya le enviaste una solicitud a " << nombre << "." << endl;
+    } else if (yo.tieneSolicitudDe(nombre)) {
+        cout << nombre << " ya te envio una solicitud. Aceptala en la opcion 1." << endl;
+    } else {
+        // La solicitud se guarda en la lista del que la RECIBE
+        usuarios[idOtro].agregarSolicitud(Solicitud(yo.getNombreUsuario(), fechaDeHoy()));
+        cout << "Solicitud enviada a " << nombre << "." << endl;
+    }
+
+    Metricas::mostrar("Enviar solicitud", memoriaDelSistema());
+}
+
+// ===================== Elegir un amigo =====================
+
+// Muestra mis amigos numerados y devuelve el id del que se escoja.
+// Devuelve -1 si no tengo amigos, si escribe 0 o si el numero no es valido.
+int Plataforma::elegirAmigo() {
+    Usuario& yo = usuarios[idActual];
+
+    if (yo.getCantidadAmigos() == 0) {
+        cout << "Todavia no tienes amigos." << endl;
+        return -1;
+    }
+
+    cout << "Tus amigos:" << endl;
+    for (int i = 0; i < yo.getCantidadAmigos(); i++) {
+        Metricas::contar();
+        cout << "  " << (i + 1) << ". " << usuarios[yo.getAmigo(i)].getNombreUsuario() << endl;
+    }
+    cout << "Numero del amigo (0 = volver): ";
+    int numero = leerOpcion();
+    Metricas::agregarMemoriaLocal(sizeof(numero));
+
+    if (numero < 1 || numero > yo.getCantidadAmigos()) {
+        if (numero != 0) {
+            cout << "Numero no valido." << endl;
+        }
+        return -1;
+    }
+    return yo.getAmigo(numero - 1);
+}
+
+// ===================== Visitar el perfil de un amigo =====================
+
+void Plataforma::visitarPerfil() {
+    Metricas::reiniciar();
+
+    int idAmigo = elegirAmigo();
+    if (idAmigo == -1) {
+        Metricas::mostrar("Visitar perfil", memoriaDelSistema());
+        return;
+    }
+    Usuario& amigo = usuarios[idAmigo];
+
+    // Datos del perfil
+    cout << endl << "Perfil de " << amigo.getNombreUsuario() << endl;
+    cout << "  Foto de perfil: " << amigo.getRutaFotoPerfil() << endl;
+    cout << "  Ciudad: " << amigo.getCiudad() << ", " << amigo.getPais() << endl;
+    cout << "  Amigos: " << amigo.getCantidadAmigos() << endl;
+
+    // Solo se muestran los albumes que un amigo puede ver.
+    // "visibles" guarda la posicion de cada uno en la lista de albumes del amigo.
+    Lista<int> visibles;
+    for (int a = 0; a < amigo.getCantidadAlbumes(); a++) {
+        Metricas::contar();
+        if (amigo.getAlbum(a).loPuedeVerUnAmigo()) {
+            visibles.agregar(a);
+        }
+    }
+    Metricas::agregarMemoriaLocal(sizeof(idAmigo) + sizeof(visibles) + visibles.memoriaArreglo());
+
+    if (visibles.getCantidad() == 0) {
+        cout << "No tiene albumes que puedas ver." << endl;
+        Metricas::mostrar("Visitar perfil", memoriaDelSistema());
+        return;
+    }
+
+    cout << "Albumes:" << endl;
+    for (int i = 0; i < visibles.getCantidad(); i++) {
+        Metricas::contar();
+        Album& album = amigo.getAlbum(visibles[i]);
+        cout << "  " << (i + 1) << ". " << album.getNombre() << " ("
+             << album.getCantidadFotos() << " fotos, " << album.getPrivacidad() << ")" << endl;
+    }
+    cout << "Numero del album (0 = volver): ";
+    int numero = leerOpcion();
+
+    if (numero < 1 || numero > visibles.getCantidad()) {
+        if (numero != 0) {
+            cout << "Numero no valido." << endl;
+        }
+        Metricas::mostrar("Visitar perfil", memoriaDelSistema());
+        return;
+    }
+
+    Album& album = amigo.getAlbum(visibles[numero - 1]);
+    carrusel(album, album.getRuta(amigo.getRuta()));
+
+    Metricas::mostrar("Visitar perfil", memoriaDelSistema());
+}
+
+// Carrusel circular: muestra una foto a la vez.
+// Despues de la ultima sigue la primera, y antes de la primera va la ultima.
+void Plataforma::carrusel(Album& album, string rutaAlbum) {
+    int cantidad = album.getCantidadFotos();
+    if (cantidad == 0) {
+        cout << "El album no tiene fotos." << endl;
+        return;
+    }
+
+    // leDiLike[i] dice si en esta visita ya le di like a la foto i,
+    // asi no se puede dar like dos veces ni quitar un like que no di
+    Lista<bool> leDiLike;
+    for (int i = 0; i < cantidad; i++) {
+        Metricas::contar();
+        leDiLike.agregar(false);
+    }
+    Metricas::agregarMemoriaLocal(sizeof(cantidad) + sizeof(leDiLike) + leDiLike.memoriaArreglo());
+
+    int actual = 0;
+    int opcion = -1;
+    while (opcion != 0) {
+        Metricas::contar();
+        Foto& foto = album.getFoto(actual);
+        cout << endl << "[" << (actual + 1) << "/" << cantidad << "] " << foto.getNombre() << endl;
+        cout << "  Ruta: " << foto.getRuta(rutaAlbum) << endl;
+        cout << "  Tomada: " << foto.getFechaCaptura() << "   Tamanio: "
+             << foto.getTamanio() << " KB   Likes: " << foto.getLikes() << endl;
+        cout << "1. Siguiente  2. Anterior  3. Like  4. Quitar like  0. Salir" << endl;
+        cout << "Opcion: ";
+        opcion = leerOpcion();
+
+        if (opcion == 1) {
+            actual = (actual + 1) % cantidad;              // de la ultima vuelve a la primera
+        } else if (opcion == 2) {
+            actual = (actual - 1 + cantidad) % cantidad;   // de la primera va a la ultima
+        } else if (opcion == 3) {
+            if (leDiLike[actual]) {
+                cout << "Ya le diste like a esta foto." << endl;
+            } else {
+                foto.darLike();
+                leDiLike[actual] = true;
+            }
+        } else if (opcion == 4) {
+            if (leDiLike[actual]) {
+                foto.quitarLike();
+                leDiLike[actual] = false;
+            } else {
+                cout << "No le has dado like a esta foto." << endl;
+            }
+        } else if (opcion != 0) {
+            cout << "Opcion no valida." << endl;
+        }
+    }
+}
+
+// ===================== Sugerencias de amistad =====================
+
+// Sugiere K usuarios (1 a 20) que no son mis amigos, ordenados por la
+// cantidad de amigos en comun conmigo (de mayor a menor).
+void Plataforma::sugerencias() {
+    Metricas::reiniciar();
+    Usuario& yo = usuarios[idActual];
+
+    cout << "Cuantas sugerencias quieres? (1 a 20): ";
+    int k = leerOpcion();
+    if (k < 1 || k > 20) {
+        cout << "Debe ser un numero entre 1 y 20." << endl;
+        Metricas::mostrar("Sugerencias", memoriaDelSistema());
+        return;
+    }
+
+    // comunes[j] = cuantos amigos tengo en comun con el usuario j.
+    // En vez de comparar con cada uno de los 1000 usuarios, recorremos
+    // los amigos de mis amigos: cada vez que aparece j, es un amigo en comun mas.
+    int n = usuarios.getCantidad();
+    int* comunes = new int[n];
+    for (int j = 0; j < n; j++) {
+        Metricas::contar();
+        comunes[j] = 0;
+    }
+    for (int i = 0; i < yo.getCantidadAmigos(); i++) {
+        Usuario& amigo = usuarios[yo.getAmigo(i)];
+        for (int a = 0; a < amigo.getCantidadAmigos(); a++) {
+            Metricas::contar();
+            int j = amigo.getAmigo(a);
+            if (j != idActual && !matriz->sonAmigos(idActual, j)) {
+                comunes[j]++;
+            }
+        }
+    }
+    Metricas::agregarMemoriaLocal(sizeof(k) + sizeof(n) + sizeof(comunes) + n * sizeof(int));
+
+    // Escoger K veces el que mas amigos en comun tenga.
+    // Despues de mostrarlo se pone en -1 para que no vuelva a salir.
+    cout << "Sugerencias de amistad:" << endl;
+    int mostradas = 0;
+    for (int s = 0; s < k; s++) {
+        int mejor = -1;
+        for (int j = 0; j < n; j++) {
+            Metricas::contar();
+            if (comunes[j] > 0 && (mejor == -1 || comunes[j] > comunes[mejor])) {
+                mejor = j;
+            }
+        }
+        if (mejor == -1) {
+            break;   // ya no hay mas usuarios con amigos en comun
+        }
+        cout << "  " << (s + 1) << ". " << usuarios[mejor].getNombreUsuario()
+             << " (" << comunes[mejor] << " amigos en comun)" << endl;
+        comunes[mejor] = -1;
+        mostradas++;
+    }
+    if (mostradas < k) {
+        cout << "Solo hay " << mostradas << " usuarios con amigos en comun." << endl;
+    }
+
+    delete[] comunes;
+    Metricas::mostrar("Sugerencias", memoriaDelSistema());
+}
+
+// ===================== Mensajes =====================
+
+// Envia un mensaje a un amigo. El texto no puede estar vacio ni pasar de 512 caracteres.
+void Plataforma::enviarMensaje() {
+    Metricas::reiniciar();
+    Usuario& yo = usuarios[idActual];
+
+    int idAmigo = elegirAmigo();
+    if (idAmigo == -1) {
+        Metricas::mostrar("Enviar mensaje", memoriaDelSistema());
+        return;
+    }
+
+    string texto;
+    cout << "Mensaje (maximo 512 caracteres): ";
+    getline(cin, texto);
+    Metricas::agregarMemoriaLocal(sizeof(idAmigo) + sizeof(texto));
+
+    if (texto == "") {
+        cout << "El mensaje no puede estar vacio." << endl;
+    } else if (texto.size() > 512) {
+        cout << "El mensaje tiene " << texto.size() << " caracteres. El maximo es 512." << endl;
+    } else {
+        // El mensaje se crea UNA vez y lo comparten tres listas:
+        // la general, la de enviados mia y la de recibidos de mi amigo
+        Mensaje* m = new Mensaje(yo.getNombreUsuario(), usuarios[idAmigo].getNombreUsuario(),
+                                 texto, fechaDeHoy());
+        mensajes.agregar(m);
+        yo.agregarMensajeEnviado(m);
+        usuarios[idAmigo].agregarMensajeRecibido(m);
+        cout << "Enviado: " << *m << endl;
+    }
+
+    Metricas::mostrar("Enviar mensaje", memoriaDelSistema());
+}
+
+// Muestra los mensajes recibidos que no he leido y los marca como leidos
+void Plataforma::leerMensajesNuevos() {
+    Metricas::reiniciar();
+    Usuario& yo = usuarios[idActual];
+
+    int nuevos = 0;
+    for (int i = 0; i < yo.getCantidadRecibidos(); i++) {
+        Metricas::contar();
+        Mensaje* m = yo.getMensajeRecibido(i);
+        if (!m->estaLeido()) {
+            cout << "  " << *m << endl;
+            m->marcarLeido();
+            nuevos++;
+        }
+    }
+    Metricas::agregarMemoriaLocal(sizeof(nuevos));
+
+    if (nuevos == 0) {
+        cout << "No tienes mensajes nuevos." << endl;
+    } else {
+        cout << "Leiste " << nuevos << " mensajes nuevos." << endl;
+    }
+    Metricas::mostrar("Leer mensajes nuevos", memoriaDelSistema());
+}
+
+// Convierte "dd/mm/aaaa" en una Fecha, revisando que exista.
+// Devuelve false si el texto no tiene ese formato o la fecha no existe.
+bool Plataforma::leerFecha(string texto, Fecha& resultado) {
+    if (texto.size() != 10 || texto[2] != '/' || texto[5] != '/') {
+        return false;
+    }
+    for (int i = 0; i < 10; i++) {
+        if (i != 2 && i != 5 && (texto[i] < '0' || texto[i] > '9')) {
+            return false;
+        }
+    }
+
+    int dia = stoi(texto.substr(0, 2));
+    int mes = stoi(texto.substr(3, 2));
+    int anio = stoi(texto.substr(6, 4));
+
+    if (mes < 1 || mes > 12) {
+        return false;
+    }
+    int diasMes[13] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    if ((anio % 4 == 0 && anio % 100 != 0) || anio % 400 == 0) {
+        diasMes[2] = 29;
+    }
+    if (dia < 1 || dia > diasMes[mes]) {
+        return false;
+    }
+
+    resultado = Fecha(dia, mes, anio);
+    return true;
+}
+
+// Busca mis mensajes (recibidos y enviados) entre dos fechas, ambas incluidas
+void Plataforma::buscarMensajes() {
+    Metricas::reiniciar();
+    Usuario& yo = usuarios[idActual];
+
+    string texto;
+    Fecha inicio;
+    Fecha fin;
+    Metricas::agregarMemoriaLocal(sizeof(texto) + sizeof(inicio) + sizeof(fin));
+
+    cout << "Fecha inicial (dd/mm/aaaa): ";
+    getline(cin, texto);
+    if (!leerFecha(texto, inicio)) {
+        cout << "Fecha no valida." << endl;
+        Metricas::mostrar("Buscar mensajes", memoriaDelSistema());
+        return;
+    }
+    cout << "Fecha final (dd/mm/aaaa): ";
+    getline(cin, texto);
+    if (!leerFecha(texto, fin)) {
+        cout << "Fecha no valida." << endl;
+        Metricas::mostrar("Buscar mensajes", memoriaDelSistema());
+        return;
+    }
+    // La fecha final incluye todo ese dia, hasta las 23:59
+    fin.setHora(23);
+    fin.setMinuto(59);
+
+    if (fin < inicio) {
+        cout << "La fecha final no puede ser antes de la inicial." << endl;
+        Metricas::mostrar("Buscar mensajes", memoriaDelSistema());
+        return;
+    }
+
+    // Las listas estan ordenadas por fecha: cuando un mensaje ya es
+    // posterior a la fecha final, los siguientes tambien lo son y paramos.
+    int encontrados = 0;
+    cout << "Recibidos:" << endl;
+    for (int i = 0; i < yo.getCantidadRecibidos(); i++) {
+        Metricas::contar();
+        Mensaje* m = yo.getMensajeRecibido(i);
+        if (fin < m->getFechaEnvio()) {
+            break;
+        }
+        if (m->estaEnRango(inicio, fin)) {
+            cout << "  " << *m << endl;
+            encontrados++;
+        }
+    }
+    cout << "Enviados:" << endl;
+    for (int i = 0; i < yo.getCantidadEnviados(); i++) {
+        Metricas::contar();
+        Mensaje* m = yo.getMensajeEnviado(i);
+        if (fin < m->getFechaEnvio()) {
+            break;
+        }
+        if (m->estaEnRango(inicio, fin)) {
+            cout << "  " << *m << endl;
+            encontrados++;
+        }
+    }
+    Metricas::agregarMemoriaLocal(sizeof(encontrados));
+
+    cout << "Se encontraron " << encontrados << " mensajes." << endl;
+    Metricas::mostrar("Buscar mensajes", memoriaDelSistema());
 }
