@@ -75,3 +75,11 @@ void Foto::quitarLike() {
 string Foto::getRuta(string rutaAlbum) const {
     return rutaAlbum + "/" + nombre + ".png";
 }
+
+// ===== Memoria =====
+
+// El objeto Foto ya se cuenta con sizeof(Foto) en el arreglo de su album.
+// Aqui sumamos lo que no esta en sizeof: los caracteres del nombre.
+int Foto::memoriaExtra() const {
+    return nombre.size();
+}

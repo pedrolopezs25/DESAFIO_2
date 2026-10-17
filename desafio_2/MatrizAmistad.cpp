@@ -8,6 +8,7 @@ MatrizAmistad::MatrizAmistad(int cantidadUsuarios) {
         matriz[i] = new bool[n];
         for (int j = 0; j < n; j++) {
             matriz[i][j] = false;
+            Metricas::contar();
         }
     }
 }
@@ -69,6 +70,7 @@ bool MatrizAmistad::sonAmigos(int i, int j) const {
 int MatrizAmistad::contarAmigosEnComun(int i, int j) const {
     int contador = 0;
     for (int k = 0; k < n; k++) {
+        Metricas::contar();
         if (matriz[i][k] && matriz[j][k]) {
             contador++;
         }
@@ -78,4 +80,10 @@ int MatrizAmistad::contarAmigosEnComun(int i, int j) const {
 
 int MatrizAmistad::getCantidadUsuarios() const {
     return n;
+}
+
+int MatrizAmistad::memoria() const {
+    int filas = n * sizeof(bool*);      // el arreglo de filas
+    int casillas = n * n * sizeof(bool); // todas las casillas
+    return sizeof(MatrizAmistad) + filas + casillas;
 }

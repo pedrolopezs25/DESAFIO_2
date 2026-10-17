@@ -36,6 +36,9 @@ public:
     // ¿La fecha del mensaje esta entre inicio y fin (ambas inclusive)?
     bool estaEnRango(Fecha inicio, Fecha fin) const;
 
+    // Memoria total del mensaje: el objeto mas sus textos
+    int memoria() const;
+
     // Funcion amiga para imprimir el mensaje con cout
     friend ostream& operator<<(ostream& salida, const Mensaje& m);
 };

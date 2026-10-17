@@ -1,6 +1,8 @@
 #ifndef MATRIZAMISTAD_H
 #define MATRIZAMISTAD_H
 
+#include "Metricas.h"
+
 // Clase MatrizAmistad: una tabla de N x N.
 // matriz[i][j] es true si el usuario i y el usuario j son amigos.
 class MatrizAmistad {
@@ -19,6 +21,10 @@ public:
     bool sonAmigos(int i, int j) const;
     int contarAmigosEnComun(int i, int j) const;
     int getCantidadUsuarios() const;
+
+    // Memoria de la tabla: el arreglo de filas mas todas las filas
+    int memoria() const;
 };
 
 #endif
+

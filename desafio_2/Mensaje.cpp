@@ -66,3 +66,11 @@ ostream& operator<<(ostream& salida, const Mensaje& m) {
     salida << "[" << m.fechaEnvio << "] " << m.emisor << ": " << m.texto;
     return salida;
 }
+
+// ===== Memoria =====
+
+// Los mensajes se crean con new, asi que contamos el objeto completo
+int Mensaje::memoria() const {
+    return sizeof(Mensaje) + emisor.size() + receptor.size() + texto.size();
+}
+

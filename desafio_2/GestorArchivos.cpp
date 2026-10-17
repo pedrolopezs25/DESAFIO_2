@@ -92,6 +92,11 @@ void GestorArchivos::cargarAmistades(Lista<Usuario>& usuarios, MatrizAmistad& ma
         Lista<string> p = separar(linea, 2);
         int a = stoi(p[0]);
         int b = stoi(p[1]);
+        // Si la linea esta repetida (o es a|a) no se agrega otra vez,
+        // asi la lista de amigos no queda con ids repetidos
+        if (a == b || matriz.sonAmigos(a, b)) {
+            continue;
+        }
         matriz.agregarAmistad(a, b);
         usuarios[a].agregarAmigo(b);
         usuarios[b].agregarAmigo(a);

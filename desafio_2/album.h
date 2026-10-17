@@ -37,6 +37,9 @@ public:
 
     // ¿Lo puede ver un amigo del dueño?
     bool loPuedeVerUnAmigo() const;
+
+    // Memoria dinamica extra: textos, arreglo de fotos y lo de cada foto
+    int memoriaExtra();
 };
 
 #endif

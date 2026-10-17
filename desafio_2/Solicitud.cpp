@@ -16,3 +16,8 @@ string Solicitud::getEmisor() const {
 Fecha Solicitud::getFecha() const {
     return fecha;
 }
+
+int Solicitud::memoriaExtra() const {
+    return emisor.size();
+}
+

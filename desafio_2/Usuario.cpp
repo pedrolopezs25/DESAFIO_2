@@ -128,6 +128,7 @@ void Usuario::eliminarSolicitud(int posicion) {
 // ¿Este usuario ya tiene una solicitud pendiente enviada por "nombre"?
 bool Usuario::tieneSolicitudDe(string nombre) {
     for (int i = 0; i < solicitudes.getCantidad(); i++) {
+        Metricas::contar();
         if (solicitudes[i].getEmisor() == nombre) {
             return true;
         }
@@ -159,4 +160,33 @@ Mensaje* Usuario::getMensajeEnviado(int posicion) {
 
 Mensaje* Usuario::getMensajeRecibido(int posicion) {
     return mensajesRecibidos[posicion];
+}
+
+// ===== Memoria =====
+
+// Nota: estos ciclos NO llaman a Metricas::contar(), porque medir la memoria
+// no es parte del trabajo de la funcionalidad que estamos midiendo.
+int Usuario::memoriaExtra() {
+    int total = 0;
+
+    // Textos
+    total = total + nombreUsuario.size() + contrasena.size() + correo.size();
+    total = total + ciudad.size() + pais.size();
+
+    // Arreglos de las listas
+    total = total + amigos.memoriaArreglo();
+    total = total + albumes.memoriaArreglo();
+    total = total + solicitudes.memoriaArreglo();
+    total = total + mensajesEnviados.memoriaArreglo();
+    total = total + mensajesRecibidos.memoriaArreglo();
+
+    // Lo que tiene adentro cada album y cada solicitud
+    for (int i = 0; i < albumes.getCantidad(); i++) {
+        total = total + albumes[i].memoriaExtra();
+    }
+    for (int i = 0; i < solicitudes.getCantidad(); i++) {
+        total = total + solicitudes[i].memoriaExtra();
+    }
+
+    return total;
 }

@@ -66,3 +66,14 @@ bool Album::loPuedeVerUnAmigo() const {
     }
     return false;
 }
+
+// ===== Memoria =====
+
+int Album::memoriaExtra() {
+    int total = nombre.size() + privacidad.size();
+    total = total + fotos.memoriaArreglo();
+    for (int i = 0; i < fotos.getCantidad(); i++) {
+        total = total + fotos[i].memoriaExtra();
+    }
+    return total;
+}

@@ -36,6 +36,10 @@ public:
 
     // Ruta completa del archivo, a partir de la ruta del album
     string getRuta(string rutaAlbum) const;
+
+    // Memoria dinamica extra (el texto del nombre)
+    int memoriaExtra() const;
 };
 
 #endif
+

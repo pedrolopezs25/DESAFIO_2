@@ -11,18 +11,20 @@ SOURCES += \
         MatrizAmistad.cpp \
         Mensaje.cpp \
         Metricas.cpp \
+        Plataforma.cpp \
         Solicitud.cpp \
         Usuario.cpp \
         main.cpp
 
 HEADERS += \
+    Album.h \
     Fecha.h \
     Foto.h \
     GestorArchivos.h \
     MatrizAmistad.h \
     Mensaje.h \
     Metricas.h \
+    Plataforma.h \
     Solicitud.h \
     Usuario.h \
-    album.h \
     lista.h

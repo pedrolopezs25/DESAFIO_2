@@ -21,6 +21,9 @@ public:
     // Getters
     string getEmisor() const;
     Fecha getFecha() const;
+
+    // Memoria dinamica extra (el texto del emisor)
+    int memoriaExtra() const;
 };
 
 #endif

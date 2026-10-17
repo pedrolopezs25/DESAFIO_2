@@ -1,6 +1,8 @@
 #ifndef LISTA_H
 #define LISTA_H
 
+#include "Metricas.h"
+
 // Clase Lista: un arreglo dinamico que crece cuando se llena.
 // La hacemos nosotros porque el enunciado no permite usar vector.
 // T puede ser cualquier tipo: int, Fecha, Usuario*, etc.
@@ -24,6 +26,9 @@ public:
     T& operator[](int posicion);
     int getCantidad() const;
     int getCapacidad() const;
+
+    // Bytes que ocupa el arreglo dinamico (todos sus puestos, llenos o vacios)
+    int memoriaArreglo() const;
 };
 
 // Constructor: empieza con espacio para 4 elementos
@@ -44,6 +49,7 @@ Lista<T>::Lista(const Lista<T>& otra) {
 
     for (int i = 0; i < cantidad; i++) {
         datos[i] = otra.datos[i];
+        Metricas::contar();
     }
 }
 
@@ -69,6 +75,7 @@ Lista<T>& Lista<T>::operator=(const Lista<T>& otra) {
 
     for (int i = 0; i < cantidad; i++) {
         datos[i] = otra.datos[i];
+        Metricas::contar();
     }
 
     return *this;
@@ -84,6 +91,7 @@ void Lista<T>::agregar(T elemento) {
 
         for (int i = 0; i < cantidad; i++) {
             nuevo[i] = datos[i];
+            Metricas::contar();
         }
 
         delete[] datos;
@@ -105,6 +113,7 @@ void Lista<T>::eliminar(int posicion) {
 
     for (int i = posicion; i < cantidad - 1; i++) {
         datos[i] = datos[i + 1];
+        Metricas::contar();
     }
 
     cantidad--;
@@ -124,6 +133,11 @@ int Lista<T>::getCantidad() const {
 template <typename T>
 int Lista<T>::getCapacidad() const {
     return capacidad;
+}
+
+template <typename T>
+int Lista<T>::memoriaArreglo() const {
+    return capacidad * sizeof(T);
 }
 
 #endif

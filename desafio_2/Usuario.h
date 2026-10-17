@@ -7,6 +7,7 @@
 #include "Album.h"
 #include "Mensaje.h"
 #include "Solicitud.h"
+#include "Metricas.h"
 using namespace std;
 
 // Parte fija de la ruta, igual para todos los usuarios
@@ -81,6 +82,10 @@ public:
     int getCantidadRecibidos() const;
     Mensaje* getMensajeEnviado(int posicion);
     Mensaje* getMensajeRecibido(int posicion);
+
+    // Memoria dinamica extra: textos y todas sus listas
+    // (los mensajes NO se cuentan aqui: los cuenta la Plataforma una sola vez)
+    int memoriaExtra();
 };
 
 #endif
