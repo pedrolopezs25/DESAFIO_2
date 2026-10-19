@@ -8,10 +8,6 @@ GestorArchivos::GestorArchivos(string c) {
 
 // ===================== Ayudantes =====================
 
-// Parte una linea por el caracter |
-// Ej: "3|ana|clave" -> ["3", "ana", "clave"]
-// maxPartes: cuando ya hay maxPartes-1 partes, el resto de la linea va
-// completo en la ultima (asi el texto de un mensaje puede tener |)
 Lista<string> GestorArchivos::separar(string linea, int maxPartes) {
     Lista<string> partes;
     string actual = "";

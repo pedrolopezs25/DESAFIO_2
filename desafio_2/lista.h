@@ -3,10 +3,6 @@
 
 #include "Metricas.h"
 
-// Clase Lista: un arreglo dinamico que crece cuando se llena.
-// La hacemos nosotros porque el enunciado no permite usar vector.
-// T puede ser cualquier tipo: int, Fecha, Usuario*, etc.
-// Por ser plantilla, todo el codigo va en este archivo .h
 template <typename T>
 class Lista {
 private:

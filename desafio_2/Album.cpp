@@ -51,8 +51,6 @@ void Album::agregarFoto(Foto f) {
 
 // ===== Ruta =====
 
-// Ejemplo: si rutaUsuario es "/users/udeabook/juanito76"
-// devuelve "/users/udeabook/juanito76/albums/Cartagena2026"
 string Album::getRuta(string rutaUsuario) const {
     return rutaUsuario + "/albums/" + nombre;
 }

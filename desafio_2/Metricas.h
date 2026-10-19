@@ -4,14 +4,6 @@
 #include <string>
 using namespace std;
 
-// Clase Metricas: mide el consumo de recursos de cada funcionalidad.
-// - Cuenta las iteraciones (vueltas de los ciclos).
-// - Suma la memoria de las variables locales y parametros por valor.
-// - Muestra los resultados al final.
-//
-// Sus atributos y metodos son "static": pertenecen a la clase y no a un objeto.
-// Asi cualquier clase puede escribir Metricas::contar(); sin tener que
-// recibir un objeto Metricas por parametro.
 class Metricas {
 private:
     static int iteraciones;
