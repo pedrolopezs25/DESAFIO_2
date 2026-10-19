@@ -1,5 +1,3 @@
-// Programa principal de Ude@Book.
-// Todo el trabajo lo hace la clase Plataforma.
 #include <iostream>
 #include "Plataforma.h"
 

@@ -60,8 +60,6 @@ void Plataforma::guardar() {
     Metricas::mostrar("Guardar datos", memoriaDelSistema());
 }
 
-// ===================== Ayudantes =====================
-
 // Lee una linea del teclado y la convierte en numero.
 // Si la persona escribe algo que no es un numero, devuelve -1.
 int Plataforma::leerOpcion() {
